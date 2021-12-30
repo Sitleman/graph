@@ -2,6 +2,7 @@
 #include <fstream>
 #include <vector>
 #include <queue>
+#include <stack>
 
 #include "IGraph.h"
 #include "ListGraph.h"
@@ -10,24 +11,31 @@
 #include "ArcGraph.h"
 using namespace std;
 
-void dfs_aux(const IGraph& graph, int vertex, vector<bool>& visited, void (*callback)(int v)){
-    visited[vertex] = true;
-    callback(vertex);
-
-    vector<int> children = graph.GetNextVertices(vertex);
-    for (auto& child: children){
-        if (!visited[child]){
-            dfs_aux(graph, child, visited, callback);
-        }
-    }
-}
-
 void dfs(const IGraph& graph, void (*callback)(int v)){
     vector<bool> visited(graph.VerticesCount(), false);
+    stack<int> q;
 
     for (int vertex = 0; vertex < graph.VerticesCount(); vertex++){
         if (!visited[vertex]){
-            dfs_aux(graph, vertex, visited, callback);
+            visited[vertex] = true;
+            callback(vertex);
+            q.push(vertex);
+            while (!q.empty()){
+                int parent = q.top();
+                bool has_unvisited_child = false;
+                vector<int> children = graph.GetNextVertices(parent);
+
+                for (auto& child: children){
+                    if (!visited[child]){
+                        visited[child] = true;
+                        callback(child);
+                        q.push(child);
+                        has_unvisited_child = true;
+                        break;
+                    }
+                }
+                if (!has_unvisited_child) q.pop();
+            }
         }
     }
 }
